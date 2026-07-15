@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
 <!-- Tailwind (JIT, browser build) -->
-<script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
     theme: {
@@ -96,39 +96,77 @@
   @keyframes spinSlow { to { transform: rotate(360deg); } }
   .animate-spin-slow { animation: spinSlow 3s linear infinite; }
 
-
-</style>
-<script>
-  function showOnPageError(title, detail) {
-    try {
-      var existing = document.getElementById('__err_overlay__');
-      if (existing) existing.remove();
-      var box = document.createElement('div');
-      box.id = '__err_overlay__';
-      box.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;color:#b91c1c;padding:16px;font-family:monospace;font-size:12px;white-space:pre-wrap;overflow:auto;';
-      box.textContent = title + '\n\n' + detail;
-      document.body.appendChild(box);
-    } catch (e) {}
+  /* Simple fade-in while the app boots (before React mounts) */
+  #boot-loader {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    background: #EFF8F6;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #0E8478;
+    font-weight: 800;
+    letter-spacing: 2px;
+    flex-direction: column;
+    gap: 12px;
   }
-  window.addEventListener('error', function (e) {
-    showOnPageError('JS Error:', (e.message || '') + '\nFile: ' + (e.filename || '') + '\nLine: ' + (e.lineno || '') + ':' + (e.colno || '') + '\n\n' + (e.error && e.error.stack ? e.error.stack : ''));
-  });
-  window.addEventListener('unhandledrejection', function (e) {
-    var r = e.reason;
-    showOnPageError('Unhandled Promise Rejection:', (r && r.message ? r.message : String(r)) + '\n\n' + (r && r.stack ? r.stack : ''));
-  });
-</script>
+  #boot-loader .spin {
+    width: 34px; height: 34px; border-radius: 999px;
+    border: 3px solid rgba(14,132,120,0.15);
+    border-top-color: #0E8478;
+    animation: spinSlow 0.9s linear infinite;
+  }
+</style>
 </head>
 <body>
+<div id="boot-loader"><div class="spin"></div><div>MICROTASK লোড হচ্ছে…</div></div>
 <div id="root"></div>
 
-<script type="module" crossorigin="anonymous">
+<script>
+  window.__bootError = null;
+  window.addEventListener('error', function (e) {
+    if (!window.__bootError) {
+      window.__bootError = (e.message || 'Unknown error') + (e.filename ? (' @ ' + e.filename.split('/').pop() + ':' + e.lineno) : '');
+    }
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    if (!window.__bootError) {
+      var reason = e.reason;
+      window.__bootError = 'Promise rejection: ' + (reason && reason.message ? reason.message : String(reason));
+    }
+  });
+  setTimeout(function () {
+    var loader = document.getElementById('boot-loader');
+    var rootEl = document.getElementById('root');
+    if (loader && rootEl && rootEl.children.length === 0) {
+      var detail = window.__bootError
+        ? ('<p style="font-size:10px;color:#b91c1c;margin-top:10px;word-break:break-all;background:#fee;padding:8px;border-radius:8px;">' + window.__bootError + '</p>')
+        : '<p style="font-size:10px;color:#94765f;margin-top:10px;">(কোনো specific error ধরা পড়েনি — সম্ভবত ব্রাউজারটি Import Map সাপোর্ট করে না)</p>';
+      loader.innerHTML =
+        '<div style="max-width:320px;text-align:center;padding:20px;">' +
+        '<div style="font-size:32px;">⚠️</div>' +
+        '<p style="font-weight:700;margin:10px 0;font-family:\'Plus Jakarta Sans\',sans-serif;">অ্যাপ লোড হতে সমস্যা হচ্ছে</p>' +
+        '<p style="font-size:12px;color:rgba(18,49,46,0.7);line-height:1.6;">সম্ভবত ইন্টারনেট থেকে Google/Firebase-এর সার্ভার ব্লক হচ্ছে, অথবা Ad-blocker চালু আছে, অথবা এই ব্রাউজার আধুনিক নয়। WiFi/অন্য নেটওয়ার্কে চেষ্টা করুন, Ad-blocker বন্ধ করুন, অথবা Google Chrome দিয়ে খুলুন।</p>' +
+        detail +
+        '<button onclick="location.reload()" style="margin-top:14px;padding:10px 22px;background:#0E8478;color:white;border:none;border-radius:10px;font-weight:700;font-size:13px;">আবার চেষ্টা করুন</button>' +
+        '</div>';
+    }
+  }, 9000);
+</script>
+
+<script type="module">
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, onSnapshot, query, where, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
+import {
+  getAuth, onAuthStateChanged, signOut,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  sendPasswordResetEmail, updateProfile,
+} from 'firebase/auth';
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot,
+  collection, query, where, addDoc, serverTimestamp,
+  increment, getDocs, writeBatch,
+} from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // ==== firebase-init.js ====
@@ -1272,15 +1310,4 @@ function InstagramTaskView({ videoUrl, introText, reward, addTransaction, isActi
         }
     };
     return (React.createElement("div", { className: "space-y-6" },
-        React.createElement("div", { className: "flex items-center gap-3.5 border-b border-ink/5 pb-4" },
-            React.createElement("button", { onClick: onBack, className: "w-9 h-9 flex items-center justify-center rounded-xl bg-white hover:bg-slate-50 border border-teal-brand/12 text-ink shadow-xs transition-all active:scale-95 cursor-pointer font-bold text-sm" }, "\u2190"),
-            React.createElement("div", null,
-                React.createElement("h2", { className: "font-display font-black text-base text-ink flex items-center gap-1.5" },
-                    React.createElement(OnlineIcon, { name: "instagram", className: "w-5 h-5" }),
-                    "ইনস্টাগ্রাম কাজ (Instagram Task)"),
-                React.createElement("p", { className: "text-[10px] text-pink-600 font-bold uppercase tracking-wider" },
-                    "\u0987\u09A8\u09B8\u09CD\u099F\u09BE\u0997\u09CD\u09B0\u09BE\u09AE \u09AB\u09B2\u09CB \u0995\u09B0\u09C7 \u09F3",
-                    reward,
-                    " \u0986\u09DF \u0995\u09B0\u09C1\u09A8"))),
-        !isActivated ? (React.createElement(ActivationGuard, { depositBalance: depositBalance, setDepositBalance: setDepositBalance, activationFee: activationFee, setIsActivated: setIsActivated, addTransaction: addTransaction, onNavigateToWallet: onNavigateToWallet })) : hasSubmittedInstagram || success ? (React.createElement(motion.div, { initial: { opacity: 0, scale: 0.95 }, animate: { opacity: 1, scale: 1 }, className: "bg-white rounded-[24px] border border-emerald-500/10 p-7 text-center space-y-4 shadow-xl" },
-            React.createElem
+        React.createElement("div", { className: "flex items-center gap-3.5 border-b border-ink/5 pb-
