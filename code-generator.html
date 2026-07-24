@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>কোড বুথ — ৪ সংখ্যার কোড জেনারেটর</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B132B;
+    --card:#131E3D;
+    --card-2:#182548;
+    --gold:#E3B23C;
+    --teal:#2EC4B6;
+    --off:#F2EFEA;
+    --off-dim:#B9C0D4;
+    --line: rgba(242,239,234,0.14);
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(46,196,182,0.10), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(227,178,60,0.10), transparent 45%),
+      var(--ink);
+    color:var(--off);
+    font-family:'Hind Siliguri', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+    overflow-x:hidden;
+  }
+
+  .wrap{
+    width:100%;
+    max-width:440px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:22px;
+  }
+
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    letter-spacing:0.32em;
+    font-size:11px;
+    color:var(--teal);
+    text-transform:uppercase;
+  }
+
+  h1{
+    font-family:'Baloo Da 2', sans-serif;
+    font-weight:700;
+    font-size:clamp(28px,7vw,36px);
+    margin:0;
+    text-align:center;
+    color:var(--off);
+  }
+
+  .sub{
+    color:var(--off-dim);
+    font-size:15px;
+    text-align:center;
+    max-width:320px;
+    line-height:1.6;
+    margin-top:-8px;
+  }
+
+  /* ---- ticket ---- */
+  .ticket{
+    position:relative;
+    width:100%;
+    background:linear-gradient(180deg, var(--card), var(--card-2));
+    border-radius:20px;
+    padding:34px 28px 26px;
+    box-shadow:0 30px 60px -25px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+  }
+
+  .ticket::before, .ticket::after{
+    content:"";
+    position:absolute;
+    width:26px;
+    height:26px;
+    background:var(--ink);
+    border-radius:50%;
+    top:50%;
+    transform:translateY(-50%);
+    box-shadow:0 0 0 1px var(--line) inset;
+  }
+  .ticket::before{ left:-13px; }
+  .ticket::after{ right:-13px; }
+
+  .perforation{
+    position:absolute;
+    left:24px; right:24px;
+    top:calc(50% - 1px);
+    border-top:2px dashed var(--line);
+  }
+
+  .stub-top{
+    padding-bottom:28px;
+    text-align:center;
+  }
+
+  .stub-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.22em;
+    color:var(--off-dim);
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+
+  .digits{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+  }
+
+  .digit-box{
+    width:56px;
+    height:70px;
+    border-radius:12px;
+    background:var(--ink);
+    border:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:32px;
+    color:var(--gold);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .digit-box span{
+    display:inline-block;
+    transition:transform .25s ease;
+  }
+
+  .digit-box.rolling span{
+    animation: roll 0.55s steps(10) forwards;
+  }
+
+  @keyframes roll{
+    0%{ transform:translateY(0); }
+    100%{ transform:translateY(0); }
+  }
+
+  .stub-bottom{
+    padding-top:26px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+
+  .meta{
+    display:flex;
+    justify-content:space-between;
+    width:100%;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--off-dim);
+    letter-spacing:0.05em;
+  }
+
+  .meta b{ color:var(--off); font-weight:600; }
+
+  button{
+    font-family:'Hind Siliguri', sans-serif;
+    font-weight:600;
+    font-size:16px;
+    border:none;
+    cursor:pointer;
+    border-radius:12px;
+    transition: transform .15s ease, filter .15s ease, opacity .15s ease;
+  }
+
+  .generate-btn{
+    width:100%;
+    padding:15px 0;
+    background:linear-gradient(180deg, var(--gold), #C99223);
+    color:#1a1200;
+    font-weight:700;
+    font-size:17px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    box-shadow:0 12px 24px -12px rgba(227,178,60,0.55);
+  }
+
+  .generate-btn:hover{ filter:brightness(1.06); }
+  .generate-btn:active{ transform:scale(0.98); }
+  .generate-btn:disabled{ opacity:0.6; cursor:not-allowed; transform:none; }
+
+  .copy-btn{
+    width:100%;
+    padding:12px 0;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--off-dim);
+    font-weight:600;
+    font-size:14px;
+  }
+  .copy-btn:hover{ color:var(--off); border-color:var(--teal); }
+
+  .status{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    min-height:16px;
+    color:var(--teal);
+    text-align:center;
+  }
+  .status.err{ color:#ff6b6b; }
+
+  footer{
+    color:var(--off-dim);
+    font-size:11px;
+    text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    opacity:0.6;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .digit-box.rolling span{ animation:none; }
+    *{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">MICRO TASK · CODE BOOTH</div>
+  <h1>৪ সংখ্যার কোড বুথ</h1>
+  <p class="sub">প্রতিটি আইডি দিয়ে একবারই কোড নেওয়া যাবে। বারবার চেষ্টা করলে আগের কোডটি বাতিল হয়ে যাবে।</p>
+
+  <div class="ticket">
+    <div class="perforation"></div>
+    <div class="stub-top">
+      <div class="stub-label">Your Code</div>
+      <div class="digits" id="digits">
+        <div class="digit-box"><span>—</span></div>
+        <div class="digit-box"><span>—</span></div>
+        <div class="digit-box"><span>—</span></div>
+        <div class="digit-box"><span>—</span></div>
+      </div>
+    </div>
+    <div class="stub-bottom">
+      <div class="meta">
+        <span>ID: <b id="docId">—</b></span>
+        <span id="timeMeta">—</span>
+      </div>
+      <button class="generate-btn" id="genBtn">✦ Generate Code</button>
+      <button class="copy-btn" id="copyBtn" disabled>কোড কপি করুন</button>
+      <div class="status" id="status">প্রস্তুত — বাটনে ক্লিক করুন</div>
+    </div>
+  </div>
+
+  <footer>Firestore collection: <b>codes</b></footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_ZGepvEHrLCwjX5C3c2jodG1dNLh1wi8",
+    authDomain: "micro-task-51cb5.firebaseapp.com",
+    databaseURL: "https://micro-task-51cb5-default-rtdb.firebaseio.com",
+    projectId: "micro-task-51cb5",
+    storageBucket: "micro-task-51cb5.firebasestorage.app",
+    messagingSenderId: "189650946409",
+    appId: "1:189650946409:web:d2018da07522f255d915f8",
+    measurementId: "G-5HSC2ZLMZW"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const genBtn = document.getElementById('genBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const statusEl = document.getElementById('status');
+  const docIdEl = document.getElementById('docId');
+  const timeMetaEl = document.getElementById('timeMeta');
+  const digitBoxes = document.querySelectorAll('.digit-box');
+  const ticketEl = document.querySelector('.ticket');
+
+  // ---- ইউজার আইডি বের করা হচ্ছে ----
+  // ১. প্রথমে URL প্যারামিটার থেকে খোঁজা হবে (?uid= বা ?id= বা ?userId=)
+  // ২. যদি URL-এ না পাওয়া যায়, তবে Browser Cookie / LocalStorage থেকে নেওয়া হবে
+  const params = new URLSearchParams(window.location.search);
+  let uid = params.get('uid') || params.get('id') || params.get('userId');
+
+  // যদি Earnlinks URL প্যারামিটার মুছে ফেলে, তবে Cookie/LocalStorage ব্যাকআপ থেকে নেওয়া
+  if (!uid) {
+    uid = localStorage.getItem('earnlinks_uid') || getCookie('earnlinks_uid');
+  }
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  }
+
+  let currentCode = null;
+
+  function randomCode(){
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  function setDigits(codeStr, animate){
+    codeStr.split('').forEach((d, i) => {
+      const box = digitBoxes[i];
+      const span = box.querySelector('span');
+      if(animate){
+        box.classList.remove('rolling');
+        void box.offsetWidth; // restart animation
+        box.classList.add('rolling');
+      }
+      span.textContent = d;
+    });
+  }
+
+  function resetDigits(){
+    digitBoxes.forEach(box => { box.querySelector('span').textContent = '—'; });
+  }
+
+  function formatTime(date){
+    return date.toLocaleTimeString('bn-BD', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  }
+
+  function lockUI(message, iconText){
+    genBtn.disabled = true;
+    genBtn.textContent = iconText || '🔒 ইতিমধ্যে ব্যবহৃত';
+    copyBtn.disabled = true;
+    ticketEl.style.opacity = '0.6';
+    statusEl.classList.add('err');
+    statusEl.textContent = message;
+  }
+
+  async function init(){
+    if(!uid){
+      lockUI('সঠিক লিংক থেকে আসেননি — uid পাওয়া যায়নি।');
+      return;
+    }
+    try{
+      const snap = await db.collection('codes').doc(uid).get();
+      if(snap.exists){
+        const data = snap.data();
+        resetDigits();
+        if(data.status === 'voided'){
+          lockUI('বারবার চেষ্টা করার কারণে আপনার কোডটি বাতিল হয়ে গেছে। নতুন কোডের জন্য আবার earnlinks.in থেকে নতুন করে আসুন।', '🚫 বাতিল হয়ে গেছে');
+        } else {
+          lockUI('এই আইডি দিয়ে ইতিমধ্যে একটি কোড নেওয়া হয়ে গেছে। নতুন কোডের জন্য আবার earnlinks.in থেকে আসুন।');
+        }
+      }
+    }catch(err){
+      statusEl.classList.add('err');
+      statusEl.textContent = 'লোড করতে সমস্যা হয়েছে: ' + err.message;
+    }
+  }
+
+  genBtn.addEventListener('click', async () => {
+    if(!uid) return;
+
+    genBtn.disabled = true;
+    statusEl.classList.remove('err');
+    statusEl.textContent = 'কোড তৈরি হচ্ছে...';
+
+    const code = randomCode();
+    const ref = db.collection('codes').doc(uid);
+
+    try{
+      const result = await db.runTransaction(async (t) => {
+        const doc = await t.get(ref);
+
+        if(!doc.exists){
+          // ---- প্রথমবার: নতুন কোড ইস্যু ----
+          t.set(ref, {
+            uid,
+            code,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            status: 'valid'
+          });
+          return 'created';
+        }
+
+        if(doc.data().status === 'valid'){
+          // ---- আবার চেষ্টা: আগের কোড বাতিল করে দাও ----
+          t.update(ref, {
+            status: 'voided',
+            voidedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          return 'voided';
+        }
+
+        // ইতিমধ্যে বাতিল হয়ে আছে
+        return 'already_voided';
+      });
+
+      if(result === 'created'){
+        setDigits(code, true);
+        currentCode = code;
+        docIdEl.textContent = uid.slice(0, 8) + '…';
+        timeMetaEl.textContent = formatTime(new Date());
+        statusEl.classList.remove('err');
+        statusEl.textContent = 'সংরক্ষণ সম্পন্ন ✓ (Firestore: codes)';
+        copyBtn.disabled = false;
+        genBtn.disabled = true;
+        genBtn.textContent = '✓ কোড নেওয়া হয়ে গেছে';
+      } else if(result === 'voided'){
+        resetDigits();
+        lockUI('বারবার চেষ্টা করার কারণে আপনার কোডটি বাতিল হয়ে গেছে। নতুন কোডের জন্য আবার earnlinks.in থেকে নতুন করে আসুন।', '🚫 বাতিল হয়ে গেছে');
+      } else {
+        resetDigits();
+        lockUI('বারবার চেষ্টা করার কারণে আপনার কোডটি বাতিল হয়ে গেছে। নতুন কোডের জন্য আবার earnlinks.in থেকে নতুন করে আসুন।', '🚫 বাতিল হয়ে গেছে');
+      }
+
+    }catch(err){
+      statusEl.classList.add('err');
+      statusEl.textContent = 'সমস্যা হয়েছে: ' + err.message;
+      genBtn.disabled = false;
+    }
+  });
+
+  init();
+
+  copyBtn.addEventListener('click', async () => {
+    if(!currentCode) return;
+    try{
+      await navigator.clipboard.writeText(currentCode);
+      const original = copyBtn.textContent;
+      copyBtn.textContent = 'কপি হয়েছে ✓';
+      setTimeout(() => { copyBtn.textContent = original; }, 1500);
+    }catch(e){
+      statusEl.textContent = 'কপি করা যায়নি';
+    }
+  });
+</script>
+
+</body>
+</html>
