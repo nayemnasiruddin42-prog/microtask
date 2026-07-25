@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>কোড বুথ — ৪ সংখ্যার কোড জেনারেটর</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B132B;
+    --card:#131E3D;
+    --card-2:#182548;
+    --gold:#E3B23C;
+    --teal:#2EC4B6;
+    --off:#F2EFEA;
+    --off-dim:#B9C0D4;
+    --line: rgba(242,239,234,0.14);
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(46,196,182,0.10), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(227,178,60,0.10), transparent 45%),
+      var(--ink);
+    color:var(--off);
+    font-family:'Hind Siliguri', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+    overflow-x:hidden;
+  }
+
+  .wrap{
+    width:100%;
+    max-width:440px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:22px;
+  }
+
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    letter-spacing:0.32em;
+    font-size:11px;
+    color:var(--teal);
+    text-transform:uppercase;
+  }
+
+  h1{
+    font-family:'Baloo Da 2', sans-serif;
+    font-weight:700;
+    font-size:clamp(28px,7vw,36px);
+    margin:0;
+    text-align:center;
+    color:var(--off);
+  }
+
+  .sub{
+    color:var(--off-dim);
+    font-size:14px;
+    text-align:center;
+    max-width:340px;
+    line-height:1.6;
+    margin-top:-8px;
+  }
+
+  /* login box */
+  .login-box {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 20px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .login-box input {
+    width: 100%;
+    padding: 12px;
+    background: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--gold);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    text-align: center;
+    font-weight: 700;
+  }
+
+  .login-box button {
+    padding: 12px;
+    background: var(--teal);
+    color: var(--ink);
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  /* ticket */
+  .ticket{
+    position:relative;
+    width:100%;
+    background:linear-gradient(180deg, var(--card), var(--card-2));
+    border-radius:20px;
+    padding:34px 28px 26px;
+    box-shadow:0 30px 60px -25px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+  }
+
+  .ticket::before, .ticket::after{
+    content:"";
+    position:absolute;
+    width:26px;
+    height:26px;
+    background:var(--ink);
+    border-radius:50%;
+    top:50%;
+    transform:translateY(-50%);
+    box-shadow:0 0 0 1px var(--line) inset;
+  }
+  .ticket::before{ left:-13px; }
+  .ticket::after{ right:-13px; }
+
+  .perforation{
+    position:absolute;
+    left:24px; right:24px;
+    top:calc(50% - 1px);
+    border-top:2px dashed var(--line);
+  }
+
+  .stub-top{
+    padding-bottom:28px;
+    text-align:center;
+  }
+
+  .stub-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.22em;
+    color:var(--off-dim);
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+
+  .digits{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+  }
+
+  .digit-box{
+    width:56px;
+    height:70px;
+    border-radius:12px;
+    background:var(--ink);
+    border:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:32px;
+    color:var(--gold);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .digit-box span{
+    display:inline-block;
+    transition:transform .25s ease;
+  }
+
+  .stub-bottom{
+    padding-top:26px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+
+  .meta{
+    display:flex;
+    justify-content:space-between;
+    width:100%;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--off-dim);
+    letter-spacing:0.05em;
+  }
+
+  .meta b{ color:var(--off); font-weight:600; }
+
+  button{
+    font-family:'Hind Siliguri', sans-serif;
+    font-weight:600;
+    font-size:16px;
+    border:none;
+    cursor:pointer;
+    border-radius:12px;
+    transition: transform .15s ease, filter .15s ease, opacity .15s ease;
+  }
+
+  .generate-btn{
+    width:100%;
+    padding:15px 0;
+    background:linear-gradient(180deg, var(--gold), #C99223);
+    color:#1a1200;
+    font-weight:700;
+    font-size:17px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    box-shadow:0 12px 24px -12px rgba(227,178,60,0.55);
+  }
+
+  .generate-btn:hover{ filter:brightness(1.06); }
+  .generate-btn:active{ transform:scale(0.98); }
+  .generate-btn:disabled{ opacity:0.6; cursor:not-allowed; transform:none; }
+
+  .copy-btn{
+    width:100%;
+    padding:12px 0;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--off-dim);
+    font-weight:600;
+    font-size:14px;
+  }
+  .copy-btn:hover{ color:var(--off); border-color:var(--teal); }
+
+  .status{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    min-height:16px;
+    color:var(--teal);
+    text-align:center;
+    line-height: 1.5;
+  }
+  .status.err{ color:#ff6b6b; }
+
+  footer{
+    color:var(--off-dim);
+    font-size:11px;
+    text-align:center;
+    font-family:'JetBrains Mono',monospace;
+    opacity:0.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">MICRO TASK · CODE BOOTH</div>
+  <h1>৪ সংখ্যার কোড বুথ</h1>
+  <p class="sub">অ্যাপ থেকে কাজের লিংকে ক্লিক করার পর ৩ মিনিটের মধ্যে আপনার ইউনিক কোডটি সংগ্রহ করুন।</p>
+
+  <!-- Login Section if User ID not set -->
+  <div class="login-box" id="loginBox" style="display:none;">
+    <div style="font-size:13px; color:var(--off-dim); text-align:center;">আপনার মোবাইল নম্বর/ইউজার আইডি লিখুন:</div>
+    <input type="text" id="phoneInput" placeholder="যেমন: 01700000000">
+    <button id="savePhoneBtn">সংরক্ষণ করুন ও প্রসেস করুন</button>
+  </div>
+
+  <div class="ticket" id="ticketBox">
+    <div class="perforation"></div>
+    <div class="stub-top">
+      <div class="stub-label">Your Code</div>
+      <div class="digits" id="digits">
+        <div class="digit-box"><span>—</span></div>
+        <div class="digit-box"><span>—</span></div>
+        <div class="digit-box"><span>—</span></div>
+        <div class="digit-box"><span>—</span></div>
+      </div>
+    </div>
+    <div class="stub-bottom">
+      <div class="meta">
+        <span>USER: <b id="userDisplay">—</b></span>
+        <button id="changeUserBtn" style="background:none; border:none; color:var(--teal); font-size:11px; cursor:pointer; padding:0;">নম্বর বদলান</button>
+      </div>
+      <button class="generate-btn" id="genBtn">✦ Generate Code</button>
+      <button class="copy-btn" id="copyBtn" disabled>কোড কপি করুন</button>
+      <div class="status" id="status">প্রস্তুত — বাটনে ক্লিক করুন</div>
+    </div>
+  </div>
+
+  <footer>Firestore collection: <b>codes</b></footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_ZGepvEHrLCwjX5C3c2jodG1dNLh1wi8",
+    authDomain: "micro-task-51cb5.firebaseapp.com",
+    databaseURL: "https://micro-task-51cb5-default-rtdb.firebaseio.com",
+    projectId: "micro-task-51cb5",
+    storageBucket: "micro-task-51cb5.firebasestorage.app",
+    messagingSenderId: "189650946409",
+    appId: "1:189650946409:web:d2018da07522f255d915f8",
+    measurementId: "G-5HSC2ZLMZW"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const loginBox = document.getElementById('loginBox');
+  const ticketBox = document.getElementById('ticketBox');
+  const phoneInput = document.getElementById('phoneInput');
+  const savePhoneBtn = document.getElementById('savePhoneBtn');
+  const userDisplay = document.getElementById('userDisplay');
+  const changeUserBtn = document.getElementById('changeUserBtn');
+
+  const genBtn = document.getElementById('genBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const statusEl = document.getElementById('status');
+  const digitBoxes = document.querySelectorAll('.digit-box');
+
+  // Check URL parameter or localStorage for User Identification
+  const params = new URLSearchParams(window.location.search);
+  let userId = params.get('userId') || params.get('uid') || params.get('id') || localStorage.getItem('app_user_id');
+
+  let activeSessionDocId = null;
+  let activeSessionData = null;
+  let currentGeneratedCode = null;
+
+  function randomCode(){
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  function setDigits(codeStr){
+    codeStr.split('').forEach((d, i) => {
+      digitBoxes[i].querySelector('span').textContent = d;
+    });
+  }
+
+  function resetDigits(){
+    digitBoxes.forEach(box => { box.querySelector('span').textContent = '—'; });
+  }
+
+  function lockUI(msg, btnText, isErr = true) {
+    genBtn.disabled = true;
+    genBtn.textContent = btnText || '🔒 বন্ধ';
+    copyBtn.disabled = true;
+    if (isErr) {
+      statusEl.classList.add('err');
+    } else {
+      statusEl.classList.remove('err');
+    }
+    statusEl.textContent = msg;
+  }
+
+  savePhoneBtn.addEventListener('click', () => {
+    const val = phoneInput.value.trim();
+    if (val) {
+      userId = val;
+      localStorage.setItem('app_user_id', val);
+      loginBox.style.display = 'none';
+      ticketBox.style.display = 'block';
+      checkLatestUserTaskSession();
+    }
+  });
+
+  changeUserBtn.addEventListener('click', () => {
+    localStorage.removeItem('app_user_id');
+    userId = null;
+    ticketBox.style.display = 'none';
+    loginBox.style.display = 'flex';
+  });
+
+  async function checkLatestUserTaskSession() {
+    if (!userId) {
+      ticketBox.style.display = 'none';
+      loginBox.style.display = 'flex';
+      return;
+    }
+
+    userDisplay.textContent = userId.length > 10 ? userId.slice(0, 10) + '…' : userId;
+    statusEl.textContent = 'আপনার টাস্ক সেশন যাচাই করা হচ্ছে...';
+
+    try {
+      // 💡 WITHOUT .orderBy to prevent Composite Index error! We sort client-side in JS
+      const snapshot = await db.collection('codes')
+        .where('userId', '==', userId)
+        .get();
+
+      if (snapshot.empty) {
+        lockUI('❌ আপনার নামে কোনো অ্যাক্টিভ টাস্ক পাওয়া যায়নি! অ্যাপে গিয়ে ভিডিও টাস্ক লিংকে ক্লিক করে আবার চেষ্টা করুন।', '🚫 টাস্ক পাওয়া যায়নি');
+        return;
+      }
+
+      // Client-side Sort by createdAt descending
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      docs.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt || 0).getTime();
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt || 0).getTime();
+        return timeB - timeA;
+      });
+
+      const latestDoc = docs[0];
+      activeSessionDocId = latestDoc.id;
+      activeSessionData = latestDoc;
+
+      // Check 3 Minutes Expiration (180,000 ms)
+      const createdMillis = latestDoc.createdAt?.toMillis ? latestDoc.createdAt.toMillis() : new Date(latestDoc.createdAt || Date.now()).getTime();
+      const timeDiff = Date.now() - createdMillis;
+      const threeMinutesMs = 3 * 60 * 1000;
+
+      if (timeDiff > threeMinutesMs) {
+        lockUI('⌛ ৩ মিনিটের সময় পার হয়ে গেছে! আপনার এই টাস্ক আইডিটি এক্সপায়ার্ড হয়ে গেছে। অ্যাপে গিয়ে নতুন টাস্ক স্টার্ট করুন।', '🚫 সময় শেষ (Expired)');
+        return;
+      }
+
+      if (latestDoc.status === 'used') {
+        lockUI('🔒 এই টাস্কটির কোড ইতিমধ্যে ব্যবহার করা হয়ে গেছে। নতুন করে পয়েন্ট পেতে অ্যাপ থেকে আবার টাস্ক স্টার্ট করুন।', '🔒 ইতিমধ্যে ব্যবহৃত');
+        return;
+      }
+
+      if (latestDoc.status === 'generated' && latestDoc.code) {
+        setDigits(latestDoc.code);
+        currentGeneratedCode = latestDoc.code;
+        copyBtn.disabled = false;
+        genBtn.disabled = true;
+        genBtn.textContent = '✓ কোড নেওয়া হয়ে গেছে';
+        statusEl.classList.remove('err');
+        statusEl.textContent = 'আপনার কোড প্রস্তুত! কপি করে অ্যাপে গিয়ে সাবমিট করুন।';
+        return;
+      }
+
+      // Valid & Active session ready to generate code
+      genBtn.disabled = false;
+      genBtn.textContent = '✦ Generate Code';
+      statusEl.classList.remove('err');
+      statusEl.textContent = 'প্রস্তুত — "Generate Code" বাটনে ক্লিক করুন।';
+
+    } catch (err) {
+      console.error(err);
+      lockUI('সমস্যা হয়েছে: ' + err.message, '⚠️ ভুল হয়েছে');
+    }
+  }
+
+  genBtn.addEventListener('click', async () => {
+    if (!activeSessionDocId || !userId) return;
+
+    genBtn.disabled = true;
+    statusEl.textContent = 'কোড তৈরি করা হচ্ছে...';
+
+    const newCode = randomCode();
+    const docRef = db.collection('codes').doc(activeSessionDocId);
+
+    try {
+      await docRef.update({
+        code: newCode,
+        status: 'generated',
+        generatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      setDigits(newCode);
+      currentGeneratedCode = newCode;
+      copyBtn.disabled = false;
+      genBtn.disabled = true;
+      genBtn.textContent = '✓ কোড দেওয়া হলো';
+      statusEl.classList.remove('err');
+      statusEl.textContent = 'আপনার কোড তৈরি সম্পন্ন হয়েছে! কপি করে অ্যাপে বসিয়ে রিওয়ার্ড নিন।';
+
+    } catch (err) {
+      console.error(err);
+      statusEl.classList.add('err');
+      statusEl.textContent = 'কোড তৈরি করতে ব্যর্থ: ' + err.message;
+      genBtn.disabled = false;
+    }
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    if (!currentGeneratedCode) return;
+    try {
+      await navigator.clipboard.writeText(currentGeneratedCode);
+      const original = copyBtn.textContent;
+      copyBtn.textContent = 'কপি হয়েছে ✓';
+      setTimeout(() => { copyBtn.textContent = original; }, 1500);
+    } catch (e) {
+      statusEl.textContent = 'কপি করা যায়নি';
+    }
+  });
+
+  // Start Checking
+  checkLatestUserTaskSession();
+</script>
+
+</body>
+</html>
