@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Micro Task - 4 Digit Code Generator Booth</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=JetBrains+Mono:wght@700;800&display=swap');
+    body { font-family: 'Hind Siliguri', sans-serif; }
+    .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-3 sm:p-6 flex flex-col justify-between">
+
+  <div class="max-w-3xl w-full mx-auto space-y-5">
+    
+    <!-- Top Header -->
+    <div class="bg-slate-900 border border-slate-800 p-3.5 px-5 rounded-2xl shadow-xl flex items-center justify-between">
+      <div class="flex items-center gap-2 text-xs sm:text-sm font-bold">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+        <span class="text-amber-400 font-black">⚡ MICRO TASK CODE BOOTH</span>
+      </div>
+      <div class="text-[11px] text-slate-400 font-mono">LIVE GENERATOR SYSTEM</div>
+    </div>
+
+    <!-- Direct Access Security Protection Warning -->
+    <div id="directAccessWarning" class="hidden bg-rose-950/90 border-2 border-rose-500/50 p-4 rounded-2xl text-rose-100 space-y-2 shadow-lg">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 font-black text-xs sm:text-sm text-rose-400">
+          <i class="fa-solid fa-triangle-exclamation text-rose-500 text-lg animate-bounce"></i>
+          <span>🔒 সিকিউরিটি সতর্কতা: সরাসরি ভিজিট সনাক্ত হয়েছে!</span>
+        </div>
+        <button id="btnBypass" onclick="bypassSecurity()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-white font-bold px-3 py-1 rounded-lg transition-all cursor-pointer">
+          অ্যাডমিন বাইপাস
+        </button>
+      </div>
+      <p class="text-xs font-medium leading-relaxed text-rose-200">
+        এই জেনারেটর পেজে সরাসরি ইউআরএল দিয়ে আসা অনুমোদিত নয়। ইউজারকে অবশ্যই <strong>Earnlinks.in</strong> বা <strong>Terabox</strong> এর কাজ শেষ করে আসতে হবে।
+      </p>
+    </div>
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-amber-950 border border-amber-500/30 p-5 rounded-3xl shadow-2xl relative overflow-hidden">
+      <div class="flex items-start justify-between">
+        <div class="space-y-1">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-[10px] font-mono uppercase font-bold">
+            <i class="fa-solid fa-shield-halved"></i> 100% Verified System
+          </div>
+          <h2 class="text-xl sm:text-2xl font-black text-white">4-Digit Verification Code Booth</h2>
+          <p class="text-xs text-slate-300">Earnlinks / Shortlink টাস্কের ভেরিফিকেশন কোড জেনারেটর</p>
+        </div>
+        <div class="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-lg shrink-0">
+          <i class="fa-solid fa-key"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Generator Card -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 space-y-5 shadow-2xl">
+      
+      <!-- User ID Login Panel -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <label class="text-[11px] font-mono text-slate-400 uppercase tracking-wider block font-bold">
+          <i class="fa-solid fa-user-check text-amber-400 mr-1"></i> ইউজার আইডি দিয়ে প্রসেস করুন (USER LOGIN)
+        </label>
+        <div class="flex gap-2">
+          <input 
+            type="text" 
+            id="inputUserId" 
+            placeholder="User ID (যেমন: M-33011723)..." 
+            value="M-33011723"
+            class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold text-amber-300 focus:outline-none focus:border-amber-400"
+          >
+          <button 
+            onclick="checkUserSession()" 
+            id="btnCheckUser"
+            class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+          >
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>চেক সেশন</span>
+          </button>
+        </div>
+
+        <div id="sessionResultBox" class="hidden p-3 rounded-xl border text-xs font-bold leading-relaxed"></div>
+      </div>
+
+      <!-- Code Box Center Display -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 text-center space-y-4 relative overflow-hidden">
+        
+        <div class="text-xs font-mono text-slate-400 uppercase tracking-wider">
+          আপনার ৪-ডিজিট ভেরিফিকেশন কোড
+        </div>
+
+        <!-- Generated Code Box -->
+        <div class="inline-block bg-slate-900 border-2 border-amber-400/40 px-8 py-3.5 rounded-2xl shadow-inner">
+          <span id="displayCode" class="text-3xl sm:text-4xl font-black font-mono-code tracking-[0.25em] text-amber-300">
+            ----
+          </span>
+        </div>
+
+        <!-- Timer & Progress Bar -->
+        <div class="max-w-md mx-auto space-y-2">
+          <div class="flex justify-between text-xs font-mono font-bold text-slate-400">
+            <span>মেয়াদ বাকি: <strong id="timerText" class="text-amber-400">03:00</strong></span>
+            <span id="codeStatusBadge" class="text-emerald-400">Active</span>
+          </div>
+          <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
+            <div id="timerProgressBar" class="bg-gradient-to-r from-amber-500 to-emerald-400 h-full rounded-full transition-all duration-1000" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap justify-center gap-3 pt-2">
+          <button 
+            onclick="copyCode()" 
+            id="btnCopy"
+            class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-lg"
+          >
+            <i class="fa-solid fa-copy"></i>
+            <span id="btnCopyText">কোড কপি করুন</span>
+          </button>
+
+          <button 
+            onclick="generateNewCode()" 
+            id="btnGenerate"
+            class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <i class="fa-solid fa-rotate-right"></i>
+            <span>নতুন কোড তুলুন</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Verification Tester Panel -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-check text-emerald-400"></i>
+          <span>কোড যাচাই পরীক্ষা (Code Verification Test)</span>
+        </div>
+        <div class="flex gap-2">
+          <input 
+            type="text" 
+            id="inputVerifyCode" 
+            placeholder="৪ সংখ্যার কোড লিখুন..." 
+            maxlength="4"
+            class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-white focus:outline-none focus:border-amber-400"
+          >
+          <button 
+            onclick="verifyCode()" 
+            class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1 cursor-pointer shrink-0"
+          >
+            <i class="fa-solid fa-check"></i>
+            <span>যাচাই করুন</span>
+          </button>
+        </div>
+        <div id="verifyResultBox" class="hidden text-xs font-bold p-2.5 rounded-xl border"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_ZGepvEHrLCwjX5C3c2jodG1dNLh1wi8",
+      authDomain: "micro-task-51cb5.firebaseapp.com",
+      databaseURL: "https://micro-task-51cb5-default-rtdb.firebaseio.com",
+      projectId: "micro-task-51cb5",
+      storageBucket: "micro-task-51cb5.firebasestorage.app",
+      messagingSenderId: "189650946409",
+      appId: "1:189650946409:web:d2018da07522f255d915f8"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let currentCode = "";
+    let timerSeconds = 180;
+    let timerInterval = null;
+
+    function checkDirectAccess() {
+      const referrer = document.referrer ? document.referrer.toLowerCase() : '';
+      const urlParams = new URLSearchParams(window.location.search);
+      const refParam = urlParams.get('ref') || urlParams.get('from');
+      const isDemo = urlParams.get('demo') === '1' || urlParams.get('admin') === 'true';
+
+      if (!referrer && !refParam && !isDemo) {
+        document.getElementById('directAccessWarning').classList.remove('hidden');
+      }
+    }
+
+    function bypassSecurity() {
+      document.getElementById('directAccessWarning').classList.add('hidden');
+    }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerSeconds = 180;
+
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById('timerText').innerText = "00:00";
+          document.getElementById('codeStatusBadge').innerText = "Expired";
+          document.getElementById('codeStatusBadge').className = "text-rose-400 font-bold";
+          document.getElementById('timerProgressBar').style.width = "0%";
+          return;
+        }
+
+        const mins = Math.floor(timerSeconds / 60);
+        const secs = timerSeconds % 60;
+        document.getElementById('timerText').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        document.getElementById('timerProgressBar').style.width = `${(timerSeconds / 180) * 100}%`;
+      }, 1000);
+    }
+
+    async function checkUserSession() {
+      const uid = document.getElementById('inputUserId').value.trim();
+      const resBox = document.getElementById('sessionResultBox');
+      resBox.classList.remove('hidden');
+
+      if (!uid) {
+        resBox.className = "p-3 rounded-xl border text-xs font-bold bg-rose-950/80 border-rose-500/40 text-rose-200";
+        resBox.innerText = "❌ অনুগ্রহ করে ইউজার আইডি দিন!";
+        return;
+      }
+
+      try {
+        const activeDoc = await db.collection('activeTaskSessions').doc(uid).get();
+        if (activeDoc.exists) {
+          const data = activeDoc.data();
+          resBox.className = "p-3 rounded-xl border text-xs font-bold bg-emerald-950/80 border-emerald-500/40 text-emerald-200";
+          resBox.innerHTML = `✅ ইউজার <strong>${data.userName || 'User'}</strong> এর অ্যাক্টিভ টাস্ক সেশন রানিং আছে।`;
+          listenForUserCode(uid);
+          return;
+        }
+
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+          const uData = userDoc.data();
+          resBox.className = "p-3 rounded-xl border text-xs font-bold bg-amber-950/80 border-amber-500/40 text-amber-200";
+          resBox.innerHTML = `⚠️ ইউজার <strong>${uData.userName || 'User'}</strong> পাওয়া গেছে, সেশন একটিভ নেই।`;
+          listenForUserCode(uid);
+          return;
+        }
+
+        resBox.className = "p-3 rounded-xl border text-xs font-bold bg-emerald-950/80 border-emerald-500/40 text-emerald-200";
+        resBox.innerHTML = `✅ ইউজার আইডি (${uid}) সেশন প্রস্তুত।`;
+      } catch (err) {
+        resBox.className = "p-3 rounded-xl border text-xs font-bold bg-amber-950/80 border-amber-500/40 text-amber-200";
+        resBox.innerText = "সেশন চেক: " + err.message;
+      }
+      listenForUserCode(uid);
+    }
+
+    function listenForUserCode(uid) {
+      db.collection('codes').doc(uid).onSnapshot((docSnap) => {
+        if (docSnap.exists && docSnap.data().code) {
+          currentCode = docSnap.data().code;
+          document.getElementById('displayCode').innerText = currentCode;
+          startTimer();
+        } else {
+          generateNewCode();
+        }
+      }, () => generateNewCode());
+    }
+
+    async function generateNewCode() {
+      const uid = document.getElementById('inputUserId').value.trim() || 'M-33011723';
+      currentCode = Math.floor(1000 + Math.random() * 9000).toString();
+      document.getElementById('displayCode').innerText = currentCode;
+      startTimer();
+
+      try {
+        await db.collection('codes').doc(uid).set({
+          code: currentCode,
+          userId: uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          expiresAt: Date.now() + 180000,
+          used: false
+        });
+      } catch (e) {}
+    }
+
+    function copyCode() {
+      if (!currentCode || currentCode === "----") return;
+      navigator.clipboard.writeText(currentCode).then(() => {
+        const btnText = document.getElementById('btnCopyText');
+        btnText.innerText = "কপি করা হয়েছে! ✓";
+        setTimeout(() => { btnText.innerText = "কোড কপি করুন"; }, 2000);
+      });
+    }
+
+    function verifyCode() {
+      const entered = document.getElementById('inputVerifyCode').value.trim();
+      const vBox = document.getElementById('verifyResultBox');
+      vBox.classList.remove('hidden');
+
+      if (entered === currentCode) {
+        vBox.className = "text-xs font-bold p-2.5 rounded-xl border bg-emerald-950/80 border-emerald-500/40 text-emerald-200";
+        vBox.innerText = "🎉 অভিনন্দন! কোডটি ১০০% সঠিক।";
+      } else {
+        vBox.className = "text-xs font-bold p-2.5 rounded-xl border bg-rose-950/80 border-rose-500/40 text-rose-200";
+        vBox.innerText = "❌ ভুল কোড! আবার চেষ্টা করুন।";
+      }
+    }
+
+    window.onload = function() {
+      checkDirectAccess();
+      checkUserSession();
+    };
+  </script>
+</body>
+</html>
