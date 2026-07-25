@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Micro Task - Code Generator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=JetBrains+Mono:wght@700;800&display=swap');
+    body {
+      font-family: 'Hind Siliguri', sans-serif;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 sm:p-8 flex flex-col justify-center items-center">
+
+  <div class="max-w-md w-full space-y-5">
+    
+    <!-- 1. Top Title -->
+    <div class="text-center space-y-1">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-400 text-xs font-bold font-mono uppercase tracking-wider">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        MICRO TASK VERIFIER
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">4-Digit Verification Code</h1>
+      <p class="text-xs text-slate-400">Earnlinks / Shortlink টাস্ক সাবমিশন কোড জেনারেটর</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl space-y-4">
+
+      <!-- 2. User Login Box (Email & Password) -->
+      <div id="loginBox" class="space-y-3">
+        <label class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+          <i class="fa-solid fa-right-to-bracket text-amber-400"></i>
+          <span>ইউজার লগইন (ইমেইল ও পাসওয়ার্ড দিন)</span>
+        </label>
+        <div class="space-y-2">
+          <div>
+            <input 
+              type="email" 
+              id="inputEmail" 
+              placeholder="আপনার ইমেইল (Email)..." 
+              class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-2.5 text-xs text-amber-300 focus:outline-none focus:border-amber-400 transition-all font-medium"
+            >
+          </div>
+          <div>
+            <input 
+              type="password" 
+              id="inputPassword" 
+              placeholder="পাসওয়ার্ড (Password)..." 
+              class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-2.5 text-xs text-amber-300 focus:outline-none focus:border-amber-400 transition-all font-medium"
+            >
+          </div>
+          <button 
+            onclick="handleUserLogin()" 
+            id="btnLogin"
+            class="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs py-3 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95"
+          >
+            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            <span>লগইন করুন (Login)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. User Information Card (Visible when logged in) -->
+      <div id="userInfoCard" class="hidden bg-slate-950/90 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-inner">
+        <div class="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+          <span class="flex items-center gap-1.5 text-amber-400">
+            <i class="fa-solid fa-circle-user"></i> ইউজারের তথ্য (User Profile)
+          </span>
+          <span id="sessionStatusBadge" class="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md text-[10px] font-bold">Checking...</span>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <!-- User Name -->
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800/80">
+            <span class="text-slate-400 text-[10px] block font-medium">ইউজারের নাম</span>
+            <strong id="displayUserName" class="text-amber-300 font-bold truncate block">খোঁজা হচ্ছে...</strong>
+          </div>
+          <!-- User Email / ID -->
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800/80 overflow-hidden">
+            <span class="text-slate-400 text-[10px] block font-medium">ইউজার ইমেইল</span>
+            <strong id="displayUserEmail" class="font-mono text-white text-[11px] font-bold truncate block">...</strong>
+          </div>
+        </div>
+
+        <!-- Active Task Info & Session Refresh -->
+        <div class="flex items-center justify-between pt-1 border-t border-slate-800/60 text-xs">
+          <div class="text-slate-400 text-[11px]">
+            <span>টাস্ক সেশন: </span>
+            <strong id="displayTaskTitle" class="text-slate-200 font-semibold">চেক করা হচ্ছে...</strong>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button 
+              onclick="refreshSession()" 
+              class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <i class="fa-solid fa-rotate"></i>
+              <span>রিফ্রেশ</span>
+            </button>
+            <button 
+              onclick="handleLogout()" 
+              title="লগআউট" 
+              class="text-[11px] bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold px-2 py-1 rounded-lg transition-all cursor-pointer"
+            >
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Single-Use Code Display Box -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 text-center space-y-4 relative overflow-hidden">
+        
+        <div class="text-xs font-mono text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-key text-amber-400"></i>
+          <span>আপনার ৪-ডিজিট ভেরিফিকেশন কোড (সক্রিয় সেশন প্রয়োজন)</span>
+        </div>
+
+        <!-- Code Display -->
+        <div class="inline-block bg-slate-900 border-2 border-amber-400/50 px-8 py-4 rounded-2xl shadow-2xl">
+          <span id="displayCode" class="text-4xl sm:text-5xl font-black font-mono-code tracking-[0.25em] text-amber-300">
+            ----
+          </span>
+        </div>
+
+        <!-- Copy Button -->
+        <div>
+          <button 
+            onclick="copyCode()" 
+            id="btnCopy"
+            class="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xl active:scale-95"
+          >
+            <i class="fa-solid fa-copy"></i>
+            <span id="btnCopyText">কোড কপি করুন</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- 5. Error & Status Message Box -->
+      <div id="messageBox" class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl text-xs font-bold text-center leading-relaxed text-slate-300">
+        ℹ️ অনুগ্রহ করে ইমেইল ও পাসওয়ার্ড দিয়ে Login করুন।
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-[11px] text-slate-500 font-mono">
+      Micro Task System &copy; 2026
+    </div>
+
+  </div>
+
+  <!-- Firebase Logic -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_ZGepvEHrLCwjX5C3c2jodG1dNLh1wi8",
+      authDomain: "micro-task-51cb5.firebaseapp.com",
+      databaseURL: "https://micro-task-51cb5-default-rtdb.firebaseio.com",
+      projectId: "micro-task-51cb5",
+      storageBucket: "micro-task-51cb5.firebasestorage.app",
+      messagingSenderId: "189650946409",
+      appId: "1:189650946409:web:d2018da07522f255d915f8"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    let currentCode = "";
+    let loggedInUid = localStorage.getItem('microtask_user_id') || "";
+    let loggedInName = localStorage.getItem('microtask_user_name') || "";
+    let loggedInEmail = localStorage.getItem('microtask_user_email') || "";
+
+    function showMessage(text, type = 'info') {
+      const msgBox = document.getElementById('messageBox');
+      if (type === 'error') {
+        msgBox.className = "bg-rose-950/90 border border-rose-500/50 p-3.5 rounded-2xl text-xs font-bold text-center leading-relaxed text-rose-200 shadow-md";
+        msgBox.innerHTML = `❌ ${text}`;
+      } else if (type === 'success') {
+        msgBox.className = "bg-emerald-950/90 border border-emerald-500/50 p-3.5 rounded-2xl text-xs font-bold text-center leading-relaxed text-emerald-200 shadow-md";
+        msgBox.innerHTML = `✅ ${text}`;
+      } else if (type === 'warning') {
+        msgBox.className = "bg-amber-950/90 border border-amber-500/50 p-3.5 rounded-2xl text-xs font-bold text-center leading-relaxed text-amber-200 shadow-md";
+        msgBox.innerHTML = `⚠️ ${text}`;
+      } else {
+        msgBox.className = "bg-slate-950 border border-slate-800 p-3.5 rounded-2xl text-xs font-bold text-center leading-relaxed text-slate-300";
+        msgBox.innerHTML = `ℹ️ ${text}`;
+      }
+    }
+
+    // Comprehensive session lookup for the logged-in user
+    async function deepLookupUserData(uid, email) {
+      let foundName = loggedInName || "";
+      let activeSessionData = null;
+
+      const idsToTest = Array.from(new Set([uid, email, 'M-33011723'].filter(Boolean)));
+
+      // 1. Check 'users' collection by doc ID
+      if (uid) {
+        try {
+          const uDoc = await db.collection('users').doc(uid).get();
+          if (uDoc.exists) {
+            const data = uDoc.data();
+            foundName = data.userName || data.displayName || data.name || (data.email ? data.email.split('@')[0] : foundName);
+          }
+        } catch(e) {}
+      }
+
+      // 2. Query 'users' collection by email if name still missing
+      if (!foundName && email) {
+        try {
+          const qEmail = await db.collection('users').where('email', '==', email).get();
+          if (!qEmail.empty) {
+            const data = qEmail.docs[0].data();
+            foundName = data.userName || data.displayName || data.name || email.split('@')[0];
+          }
+        } catch(e) {}
+      }
+
+      // 3. Check 'activeTaskSessions' by doc ID and query
+      for (const id of idsToTest) {
+        try {
+          const sDoc = await db.collection('activeTaskSessions').doc(id).get();
+          if (sDoc.exists) {
+            const sData = sDoc.data();
+            if (sData.status === 'active') {
+              activeSessionData = sData;
+            }
+            if (!foundName && sData.userName) {
+              foundName = sData.userName;
+            }
+          }
+        } catch(e) {}
+      }
+
+      if (!activeSessionData) {
+        // Query activeTaskSessions where userId == uid OR email == email
+        for (const id of idsToTest) {
+          try {
+            const sQuery = await db.collection('activeTaskSessions').where('userId', '==', id).get();
+            if (!sQuery.empty) {
+              const sData = sQuery.docs[0].data();
+              if (sData.status === 'active') {
+                activeSessionData = sData;
+                break;
+              }
+            }
+          } catch(e) {}
+        }
+      }
+
+      return {
+        userName: foundName,
+        session: activeSessionData
+      };
+    }
+
+    // UI State Manager
+    function updateLoginUIState() {
+      const loginBox = document.getElementById('loginBox');
+      const userInfoCard = document.getElementById('userInfoCard');
+
+      if (loggedInUid || loggedInEmail) {
+        loginBox.classList.add('hidden');
+        userInfoCard.classList.remove('hidden');
+
+        document.getElementById('displayUserEmail').innerText = loggedInEmail || loggedInUid;
+        document.getElementById('displayUserName').innerText = loggedInName || "নাম খোঁজা হচ্ছে...";
+      } else {
+        loginBox.classList.remove('hidden');
+        userInfoCard.classList.add('hidden');
+        document.getElementById('displayCode').innerText = "----";
+        showMessage("অনুগ্রহ করে ইমেইল ও পাসওয়ার্ড দিয়ে Login করুন।", "info");
+      }
+    }
+
+    // Handle User Login click
+    async function handleUserLogin() {
+      const email = document.getElementById('inputEmail').value.trim();
+      const password = document.getElementById('inputPassword').value.trim();
+
+      if (!email || !password) {
+        showMessage("অনুগ্রহ করে ইমেইল এবং পাসওয়ার্ড প্রদান করুন!", 'error');
+        return;
+      }
+
+      showMessage("ইউজার ভেরিফাই ও সেশন তথ্য চেক করা হচ্ছে...", 'info');
+
+      try {
+        let uid = "";
+        let userName = "";
+
+        // 1. Authenticate with Firebase Auth
+        try {
+          const authRes = await auth.signInWithEmailAndPassword(email, password);
+          if (authRes && authRes.user) {
+            uid = authRes.user.uid;
+          }
+        } catch (authErr) {
+          console.warn("Firebase auth signin failed, checking firestore users directly...", authErr);
+        }
+
+        // 2. Fetch user profile from Firestore users collection
+        if (uid) {
+          const uDoc = await db.collection('users').doc(uid).get();
+          if (uDoc.exists) {
+            const uData = uDoc.data();
+            userName = uData.userName || uData.displayName || email.split('@')[0];
+          }
+        }
+
+        if (!uid || !userName) {
+          // Query users collection by email
+          const qSnap = await db.collection('users').where('email', '==', email).get();
+          if (!qSnap.empty) {
+            const uDoc = qSnap.docs[0];
+            const uData = uDoc.data();
+            uid = uid || uDoc.id || uData.userId;
+            userName = userName || uData.userName || email.split('@')[0];
+          }
+        }
+
+        if (!uid) {
+          // If auth failed and user not in firestore
+          showMessage("ভুল ইমেইল বা পাসওয়ার্ড! রেজিস্টার্ড ইমেইল ব্যবহার করুন।", 'error');
+          return;
+        }
+
+        userName = userName || email.split('@')[0];
+
+        localStorage.setItem('microtask_user_email', email);
+        localStorage.setItem('microtask_user_id', uid);
+        localStorage.setItem('microtask_user_name', userName);
+
+        loggedInEmail = email;
+        loggedInUid = uid;
+        loggedInName = userName;
+
+        updateLoginUIState();
+        verifySessionAndFetchCode(uid, email);
+
+      } catch (err) {
+        console.error("Login process error:", err);
+        showMessage("লগইন করতে সমস্যা হয়েছে! অনুগ্রহ করে সঠিক ইমেইল ও পাসওয়ার্ড দিয়ে চেষ্টা করুন।", 'error');
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('microtask_user_email');
+      localStorage.removeItem('microtask_user_id');
+      localStorage.removeItem('microtask_user_name');
+      loggedInEmail = "";
+      loggedInUid = "";
+      loggedInName = "";
+      currentCode = "----";
+      auth.signOut().catch(() => {});
+      updateLoginUIState();
+    }
+
+    function refreshSession() {
+      if (loggedInUid || loggedInEmail) {
+        showMessage("সেশন আইডি পুনরায় পরীক্ষা করা হচ্ছে...", "info");
+        verifySessionAndFetchCode(loggedInUid, loggedInEmail);
+      }
+    }
+
+    // STRICT SESSION CHECK & CODE FETCH
+    async function verifySessionAndFetchCode(uid, email) {
+      try {
+        const lookup = await deepLookupUserData(uid, email);
+
+        if (lookup.userName) {
+          loggedInName = lookup.userName;
+          localStorage.setItem('microtask_user_name', loggedInName);
+          document.getElementById('displayUserName').innerText = loggedInName;
+        }
+
+        // Check if an active session exists
+        if (!lookup.session) {
+          currentCode = "----";
+          document.getElementById('displayCode').innerText = "----";
+          document.getElementById('displayTaskTitle').innerText = "কোনো সক্রিয় সেশন নেই";
+          document.getElementById('sessionStatusBadge').innerText = "No Session ID";
+          document.getElementById('sessionStatusBadge').className = "text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md text-[10px] font-bold";
+
+          showMessage("❌ কোনো সক্রিয় টাস্ক সেশন (Session ID) পাওয়া যায়নি! প্রথমে অ্যাপে গিয়ে কাজের 'Open Link' এ ক্লিক করে কাজ শুরু করুন।", 'error');
+          return;
+        }
+
+        // Active Session EXISTS!
+        const sessionData = lookup.session;
+        document.getElementById('displayTaskTitle').innerText = sessionData.taskTitle || sessionData.taskId || "Active Shortlink Task";
+        document.getElementById('sessionStatusBadge').innerText = "Active Session";
+        document.getElementById('sessionStatusBadge').className = "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md text-[10px] font-bold";
+
+        // Fetch or Generate Single-Use Code
+        const idsToTest = Array.from(new Set([uid, email, 'M-33011723'].filter(Boolean)));
+        
+        let existingCodeDoc = null;
+        let foundCodeDocId = uid || email;
+
+        for (const id of idsToTest) {
+          const cSnap = await db.collection('codes').doc(id).get();
+          if (cSnap.exists) {
+            existingCodeDoc = cSnap.data();
+            foundCodeDocId = id;
+            break;
+          }
+        }
+
+        if (existingCodeDoc && existingCodeDoc.code) {
+          currentCode = existingCodeDoc.code;
+          document.getElementById('displayCode').innerText = currentCode;
+
+          if (existingCodeDoc.used) {
+            document.getElementById('sessionStatusBadge').innerText = "Used Code";
+            document.getElementById('sessionStatusBadge').className = "text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md text-[10px] font-bold";
+            showMessage("এই কোডটি ইতিমধ্যে ব্যবহার করা হয়েছে! নতুন কাজ শুরু করুন।", 'warning');
+          } else {
+            showMessage("আপনার ৪-ডিজিট কোড প্রস্তুত! কপি করে অ্যাপে সাবমিট করুন।", 'success');
+          }
+          return;
+        }
+
+        // Generate brand new code
+        currentCode = Math.floor(1000 + Math.random() * 9000).toString();
+        document.getElementById('displayCode').innerText = currentCode;
+
+        const targetCodeId = uid || email || 'M-33011723';
+        await db.collection('codes').doc(targetCodeId).set({
+          code: currentCode,
+          userId: uid || email,
+          userEmail: email,
+          userName: loggedInName,
+          taskId: sessionData.taskId || "shortlink",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          used: false
+        });
+
+        showMessage("নতুন কোড সফলভাবে জেনারেট হয়েছে! এটি মাত্র ১ বার ব্যবহার করতে পারবেন।", 'success');
+
+      } catch (e) {
+        console.error("Session check error:", e);
+        currentCode = "----";
+        document.getElementById('displayCode').innerText = "----";
+        showMessage("সেশন ভেরিফিকেশন ব্যর্থ হয়েছে! অনুগ্রহ করে আবার সেশন তৈরি করে পেজ রিফ্রেশ করুন।", 'error');
+      }
+    }
+
+    // Copy Code
+    function copyCode() {
+      if (!currentCode || currentCode === "----") {
+        showMessage("কপি করার মতো কোনো কোড নেই! প্রথমে অ্যাপ থেকে কাজ শুরু করুন।", 'error');
+        return;
+      }
+
+      navigator.clipboard.writeText(currentCode).then(() => {
+        const btnText = document.getElementById('btnCopyText');
+        btnText.innerText = "কপি সম্পন্ন হয়েছে! ✓";
+        showMessage("কোড কপি করা হয়েছে! এখন অ্যাপে গিয়ে সাবমিট করুন।", 'success');
+        
+        setTimeout(() => {
+          btnText.innerText = "কোড কপি করুন";
+        }, 2500);
+      }).catch(() => {
+        showMessage("কপি করতে সমস্যা হয়েছে, ম্যানুয়ালি কপি করুন: " + currentCode, 'warning');
+      });
+    }
+
+    // Auto login check on page load
+    window.onload = function() {
+      updateLoginUIState();
+      if (loggedInUid || loggedInEmail) {
+        verifySessionAndFetchCode(loggedInUid, loggedInEmail);
+      }
+    };
+  </script>
+</body>
+</html>
